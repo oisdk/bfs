@@ -1,0 +1,79 @@
+name:                bfs
+version:             0.1.0.0
+github:              "oisdk/bfs"
+license:             MIT
+author:              "Donnacha Oisín Kidney"
+maintainer:          "mail@doisinkidney.com"
+copyright:           "2018 Donnacha Oisín Kidney"
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/oisdk/bfs#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+- comonad
+- lens
+- free
+- containers
+- semigroupoids
+- mtl
+- profunctors
+
+library:
+  source-dirs: src
+
+ghc-options:
+- -Wall
+- -fwarn-incomplete-record-updates
+- -fwarn-incomplete-uni-patterns
+when:
+  - condition: impl(ghc >= 8.0)
+    ghc-options:
+    - -fwarn-redundant-constraints
+    - -Wcompat
+
+tests:
+  bfs-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - bfs
+    - hedgehog
+  bfs-doctests:
+    main:                doctests.hs
+    source-dirs:         doctest
+    ghc-options:
+    - -threaded
+    dependencies:
+    - bfs
+    - doctest
+    - QuickCheck
+
+benchmarks:
+  bench:
+    main: bench.hs
+    source-dirs: bench
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    - -O2
+    dependencies:
+    - bfs
+    - criterion
+    - random
+    - deepseq

@@ -1,0 +1,119 @@
+-- This file has been generated from package.yaml by hpack version 0.28.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: c5af39b3a752e17a7c92aa63f061f93435ef89180c66809fb4023038a4a5b0c5
+
+name:           bfs
+version:        0.1.0.0
+description:    Please see the README on Github at <https://github.com/oisdk/bfs#readme>
+homepage:       https://github.com/oisdk/bfs#readme
+bug-reports:    https://github.com/oisdk/bfs/issues
+author:         Donnacha Oisín Kidney
+maintainer:     mail@doisinkidney.com
+copyright:      2018 Donnacha Oisín Kidney
+license:        MIT
+license-file:   LICENSE
+build-type:     Simple
+cabal-version:  >= 1.10
+extra-source-files:
+    ChangeLog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/oisdk/bfs
+
+library
+  exposed-modules:
+      Control.Comonad.BreadthFirst
+      Control.Monad.State.Simple
+  other-modules:
+      Paths_bfs
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -fwarn-incomplete-record-updates -fwarn-incomplete-uni-patterns
+  build-depends:
+      base >=4.7 && <5
+    , comonad
+    , containers
+    , free
+    , lens
+    , mtl
+    , profunctors
+    , semigroupoids
+  if impl(ghc >= 8.0)
+    ghc-options: -fwarn-redundant-constraints -Wcompat
+  default-language: Haskell2010
+
+test-suite bfs-doctests
+  type: exitcode-stdio-1.0
+  main-is: doctests.hs
+  other-modules:
+      Paths_bfs
+  hs-source-dirs:
+      doctest
+  ghc-options: -Wall -fwarn-incomplete-record-updates -fwarn-incomplete-uni-patterns -threaded
+  build-depends:
+      QuickCheck
+    , base >=4.7 && <5
+    , bfs
+    , comonad
+    , containers
+    , doctest
+    , free
+    , lens
+    , mtl
+    , profunctors
+    , semigroupoids
+  if impl(ghc >= 8.0)
+    ghc-options: -fwarn-redundant-constraints -Wcompat
+  default-language: Haskell2010
+
+test-suite bfs-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_bfs
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -fwarn-incomplete-record-updates -fwarn-incomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , bfs
+    , comonad
+    , containers
+    , free
+    , hedgehog
+    , lens
+    , mtl
+    , profunctors
+    , semigroupoids
+  if impl(ghc >= 8.0)
+    ghc-options: -fwarn-redundant-constraints -Wcompat
+  default-language: Haskell2010
+
+benchmark bench
+  type: exitcode-stdio-1.0
+  main-is: bench.hs
+  other-modules:
+      Paths_bfs
+  hs-source-dirs:
+      bench
+  ghc-options: -Wall -fwarn-incomplete-record-updates -fwarn-incomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N -O2
+  build-depends:
+      base >=4.7 && <5
+    , bfs
+    , comonad
+    , containers
+    , criterion
+    , deepseq
+    , free
+    , lens
+    , mtl
+    , profunctors
+    , random
+    , semigroupoids
+  if impl(ghc >= 8.0)
+    ghc-options: -fwarn-redundant-constraints -Wcompat
+  default-language: Haskell2010
