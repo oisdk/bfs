@@ -35,6 +35,15 @@ identityTrav = runIdentity . breadthFirst Identity
 fullTrav :: Traversable f => Cofree f Int -> (Int, Cofree f Int)
 fullTrav = first getSum . breadthFirst (\x -> (Sum x, x+1))
 
+constTrav2 :: Traversable f =>  Cofree f Int -> Int
+constTrav2 = getSum . getConst . breadthFirst2 (Const . Sum)
+
+identityTrav2 :: Traversable f => Cofree f a -> Cofree f a
+identityTrav2 = runIdentity . breadthFirst2 Identity
+
+fullTrav2 :: Traversable f => Cofree f Int -> (Int, Cofree f Int)
+fullTrav2 = first getSum . breadthFirst2 (\x -> (Sum x, x+1))
+
 benchAtSize :: Int -> [Int] -> Benchmark
 benchAtSize n ms =
     bgroup
@@ -45,9 +54,12 @@ benchAtSize n ms =
                   (show m)
                   [ bgroup
                         "traversals"
-                        [ bench "const" $ nf constTrav xs
-                        , bench "id" $ nf identityTrav xs
-                        , bench "full" $ nf fullTrav xs]
+                        [ bench "const/old" $ nf constTrav2 xs
+                        , bench "const/new" $ nf constTrav xs
+                        , bench "id/old"    $ nf identityTrav2 xs
+                        , bench "id/new"    $ nf identityTrav xs
+                        , bench "full/old"  $ nf fullTrav2 xs
+                        , bench "full/new"  $ nf fullTrav xs]
                   , bgroup
                         "levels"
                         [ bench "levels1" $ nf levels1 xs

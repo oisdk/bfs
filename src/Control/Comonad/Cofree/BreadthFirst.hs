@@ -1,9 +1,10 @@
 {-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Control.Comonad.Cofree.BreadthFirst
   (breadthFirst
+  ,breadthFirst2
   ,ibreadthFirst
   ,levels1
   ,levels2
@@ -20,21 +21,30 @@ uncons  = \case
     []     -> errorWithoutStackTrace "uncons: empty list!"
 {-# INLINE uncons #-}
 
+
 breadthFirst
     :: forall t a f b. (Applicative f, Traversable t)
     => (a -> f b) -> Cofree t a -> f (Cofree t b)
 breadthFirst c t =
     head <$> f b t (pure (pure [])) []
   where
-    f :: forall x.
-         (f (State [Cofree t b] [Cofree t b]) -> [t (Cofree t a)] -> x)
-      -> Cofree t a
-      -> (f (State [Cofree t b] [Cofree t b]) -> [t (Cofree t a)] -> x)
-    f k (x :< xs) ls qs = k (app2 (\y ys zs -> (y :< ys) : zs) (c x) (fill xs) ls) (xs : qs)
+    f k (x:<xs) ls qs = k (app2 (\y ys zs -> (y:<ys):zs) (c x) (fill xs) ls) (xs:qs)
 
-    b k [] = fmap (flip evalState []) k
-    b k qs = liftA2 evalState k $ foldl (foldl f) b qs (pure (pure [])) []
+    b k (q:qs) = liftA2 evalState k (foldl (foldl f) (foldl f b q) qs (pure (pure [])) [])
+    b _ [] = pure []
 {-# INLINE breadthFirst #-}
+
+breadthFirst2
+    :: (Applicative f, Traversable t)
+    => (a -> f b) -> Cofree t a -> f (Cofree t b)
+breadthFirst2 c (t:<ts) = liftA2 evalState (map2 (:<) (c t) (fill ts)) chld
+  where
+    chld = foldr (liftA2 evalState) (pure []) (foldr f [] ts)
+    {-# INLINE chld #-}
+
+    f (x:<xs) (q:qs) = app2 (\y ys zs -> (y:<ys) : zs) (c x) (fill xs) q : foldr f qs xs
+    f (x:<xs) []     = map2 (\y ys    -> [y:<ys]     ) (c x) (fill xs)   : foldr f [] xs
+{-# INLINE breadthFirst2 #-}
 
 ibreadthFirst
     :: (Applicative f, Traversable t)
@@ -84,3 +94,4 @@ levels3 tr = f tr [] where
   f (x:<xs) (y:ys) = (x:y) : foldr f ys xs
   f (x:<xs) []     = [x]   : foldr f [] xs
 {-# INLINE levels3 #-}
+
