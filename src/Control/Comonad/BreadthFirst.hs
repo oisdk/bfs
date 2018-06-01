@@ -1,14 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
+
 module Control.Comonad.BreadthFirst where
 
 import           Control.Comonad.Cofree
 
 import           Control.Applicative
 import           Control.Monad.State.Simple
-import           Data.Bifunctor
-import           Data.Functor.Compose
-import           Data.Monoid                (Endo (..))
-import           Data.Profunctor.Unsafe
+-- import           Data.Bifunctor
+-- import           Data.Functor.Compose
+-- import           Data.Monoid                (Endo (..))
+-- import           Data.Profunctor.Unsafe
 
 -- breadthFirst
 --     :: (Traversable t, Applicative f)
@@ -32,19 +33,21 @@ import           Data.Profunctor.Unsafe
 breadthFirst
     :: (Applicative f, Traversable t)
     => (a -> f b) -> Cofree t a -> f (Cofree t b)
-breadthFirst c (t :< ts) =
-    liftA2 evalState (map2 (:<) (c t) (fill ts)) chld
+breadthFirst c (t :< ts) = liftA2 evalState (map2 (:<) (c t) (fill ts)) chld
   where
     chld = foldr (liftA2 evalState) (pure []) (foldr f [] ts)
     {-# INLINE chld #-}
-    fill = traverse (const (State (\(x:xs) -> (x,xs))))
+    fill = traverse (const (State (\case
+                                        (x:xs) -> (x, xs)
+                                        [] -> errorWithoutStackTrace
+                                                  "Control.Comonad.BreadthFirst: bug!")))
     {-# INLINE fill #-}
+    f (x :< xs) (q:qs) = app2 (\y ys zs -> (y :< ys) : zs) (c x) (fill xs) q : foldr f qs xs
+    f (x :< xs) []     = map2 (\y ys    -> [y :< ys]     ) (c x) (fill xs)   : foldr f [] xs
 
-    f (x:<xs) (q:qs) = app2 (\y ys zs -> (y:<ys) : zs) (c x) (fill xs) q : foldr f qs xs
-    f (x:<xs) []     = map2 (\y ys    -> [y:<ys]     ) (c x) (fill xs)   : foldr f [] xs
-
-    map2 k x xs = fmap (\y -> fmap (k y) xs) x
-    {-# INLINE map2 #-}
+    map2 k x xs = fmap   (\y -> fmap   (k y) xs) x
     app2 k x xs = liftA2 (\y -> liftA2 (k y) xs) x
+
+    {-# INLINE map2 #-}
     {-# INLINE app2 #-}
 {-# INLINE breadthFirst #-}
