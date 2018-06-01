@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecursiveDo         #-}
 
 module Control.Comonad.Cofree.BreadthFirst
   (breadthFirst
@@ -17,13 +18,8 @@ import           Data.Profunctor.Unsafe
 breadthFirst
     :: forall t a f b. (Traversable t, Applicative f)
     => (a -> f b) -> Cofree t a  -> f (Cofree t b)
-breadthFirst c (t:<ts) =
-    liftA2
-        evalState
-        (map2 (:<) (c t) fill)
-        (foldr (liftA2 evalState) (pure []) chld)
+breadthFirst c t = uncurry (fmap . evalState) (fmap (foldr ( liftA2 evalState ) (pure [])) (runState (f t) []))
   where
-    (fill,chld) = runState (levl ts) []
 
     levl :: t (Cofree t a) -> State [f (State [Cofree t b] [Cofree t b])] (State [Cofree t b] (t (Cofree t b)))
     levl = (forwards . getCompose) #. traverse (Compose #. Backwards #. f)
