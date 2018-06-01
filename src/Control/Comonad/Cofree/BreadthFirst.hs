@@ -14,17 +14,18 @@ import           Control.Applicative.Backwards
 import           Control.Monad.State.Simple
 import           Data.Functor.Compose
 import           Data.Profunctor.Unsafe
+import Data.Foldable
 
 breadthFirst
     :: forall t a f b. (Traversable t, Applicative f)
     => (a -> f b) -> Cofree t a  -> f (Cofree t b)
-breadthFirst c t = uncurry (fmap . evalState) (fmap (foldr ( liftA2 evalState ) (pure [])) (runState (f t) []))
+breadthFirst c t = evalState (f t >>= h) []
   where
 
-    levl :: t (Cofree t a) -> State [f (State [Cofree t b] [Cofree t b])] (State [Cofree t b] (t (Cofree t b)))
+    h ts = gets (fmap (evalState ts) . foldr (liftA2 evalState) (pure []))
+
     levl = (forwards . getCompose) #. traverse (Compose #. Backwards #. f)
 
-    f :: Cofree t a -> State [f (State [Cofree t b] [Cofree t b])] (State [Cofree t b] (Cofree t b))
     f (x:<xs) = do
         q <- State unconsMay
         r <- levl xs
