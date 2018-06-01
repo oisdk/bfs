@@ -26,12 +26,14 @@ breadthFirst
     :: forall t a f b. (Applicative f, Traversable t)
     => (a -> f b) -> Cofree t a -> f (Cofree t b)
 breadthFirst c t =
-    head <$> f b t (pure (pure [])) []
+    fmap head (f b t e [])
   where
     f k (x:<xs) ls qs = k (app2 (\y ys zs -> (y:<ys):zs) (c x) (fill xs) ls) (xs:qs)
 
-    b k (q:qs) = liftA2 evalState k (foldl (foldl f) (foldl f b q) qs (pure (pure [])) [])
     b _ [] = pure []
+    b k qs = liftA2 evalState k (foldl (foldl f) b qs e [])
+
+    e = pure (pure [])
 {-# INLINE breadthFirst #-}
 
 breadthFirst2
