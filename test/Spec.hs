@@ -18,7 +18,7 @@ import           Control.Monad ((<=<))
 import           Data.Tree                    (Tree (..))
 import qualified Data.Tree                    as Tree
 
-tree :: Iso (Cofree [] a) (Cofree [] b)(Tree a) (Tree b)
+tree :: Iso (Cofree [] a) (Cofree [] b) (Tree a) (Tree b)
 tree = iso toTree fromTree
   where
     toTree (x :< xs) = Node x (map toTree xs)
@@ -49,6 +49,14 @@ prop_itravorder :: Property
 prop_itravorder = property $ do
     xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
     fst (ibreadthFirst (\i x ->([(i,x)], ())) xs) === views tree (sequenceA <=< zip [0..] . Tree.levels) xs
+
+prop_levels :: Property
+prop_levels = property $ do
+    xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
+    let ys = views tree Tree.levels xs
+    ys === levels1 xs
+    ys === levels2 xs
+    ys === levels3 xs
 
 
 main :: IO Bool

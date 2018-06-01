@@ -37,15 +37,23 @@ fullTrav = first getSum . breadthFirst (\x -> (Sum x, x+1))
 
 benchAtSize :: Int -> [Int] -> Benchmark
 benchAtSize n ms =
-    bgroup (show n)
-    [ env (cof n m) $
-     \xs ->
-          bgroup
-              (show m)
-              [ bench "const" $ nf constTrav xs
-              , bench "id" $ nf identityTrav xs
-              , bench "full" $ nf fullTrav xs]
-    | m <- ms ]
+    bgroup
+        (show n)
+        [ env (cof n m) $
+         \xs ->
+              bgroup
+                  (show m)
+                  [ bgroup
+                        "traversals"
+                        [ bench "const" $ nf constTrav xs
+                        , bench "id" $ nf identityTrav xs
+                        , bench "full" $ nf fullTrav xs]
+                  , bgroup
+                        "levels"
+                        [ bench "levels1" $ nf levels1 xs
+                        , bench "levels2" $ nf levels2 xs
+                        , bench "levels3" $ nf levels3 xs]]
+        | m <- ms ]
 
 main :: IO ()
 main = defaultMain (map (uncurry benchAtSize) [(10000,[5,10,50])])
