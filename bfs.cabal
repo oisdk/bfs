@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c5af39b3a752e17a7c92aa63f061f93435ef89180c66809fb4023038a4a5b0c5
+-- hash: c41b9dd95c4e49b1a8cd3a8ebcb14cd2cfe2bc94d5e5b3a9d51942555752776f
 
 name:           bfs
 version:        0.1.0.0
@@ -42,6 +42,7 @@ library
     , mtl
     , profunctors
     , semigroupoids
+    , transformers
   if impl(ghc >= 8.0)
     ghc-options: -fwarn-redundant-constraints -Wcompat
   default-language: Haskell2010
@@ -66,6 +67,7 @@ test-suite bfs-doctests
     , mtl
     , profunctors
     , semigroupoids
+    , transformers
   if impl(ghc >= 8.0)
     ghc-options: -fwarn-redundant-constraints -Wcompat
   default-language: Haskell2010
@@ -89,6 +91,7 @@ test-suite bfs-test
     , mtl
     , profunctors
     , semigroupoids
+    , transformers
   if impl(ghc >= 8.0)
     ghc-options: -fwarn-redundant-constraints -Wcompat
   default-language: Haskell2010
@@ -114,6 +117,7 @@ benchmark bench
     , profunctors
     , random
     , semigroupoids
+    , transformers
   if impl(ghc >= 8.0)
     ghc-options: -fwarn-redundant-constraints -Wcompat
   default-language: Haskell2010

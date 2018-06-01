@@ -20,12 +20,12 @@ instance Applicative (State s) where
   pure x = State (\s -> (x, s))
   {-# INLINE pure #-}
   fs <*> xs = State (\s -> case runState fs s of
-    (f, s) -> case runState xs s of
-      (x, s) -> (f x, s))
+    (f, s') -> case runState xs s' of
+      (x, s'') -> (f x, s''))
   {-# INLINE (<*>) #-}
   liftA2 f xs ys = State (\s -> case runState xs s of
-                             (x, s) -> case runState ys s of
-                               (y, s) -> (f x y, s))
+                             (x, s') -> case runState ys s' of
+                               (y, s'') -> (f x y, s''))
   {-# INLINE liftA2 #-}
 
 

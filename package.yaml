@@ -28,6 +28,7 @@ dependencies:
 - semigroupoids
 - mtl
 - profunctors
+- transformers
 
 library:
   source-dirs: src
