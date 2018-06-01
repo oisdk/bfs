@@ -35,6 +35,9 @@ identityTrav = runIdentity . breadthFirst Identity
 fullTrav :: Traversable f => Cofree f Int -> (Int, Cofree f Int)
 fullTrav = first getSum . breadthFirst (\x -> (Sum x, x+1))
 
+expTrav :: Traversable f => Cofree f Int -> [Cofree f Int]
+expTrav = breadthFirst (\x -> [x, x])
+
 constTrav2 :: Traversable f =>  Cofree f Int -> Int
 constTrav2 = getSum . getConst . breadthFirst2 (Const . Sum)
 
@@ -43,6 +46,9 @@ identityTrav2 = runIdentity . breadthFirst2 Identity
 
 fullTrav2 :: Traversable f => Cofree f Int -> (Int, Cofree f Int)
 fullTrav2 = first getSum . breadthFirst2 (\x -> (Sum x, x+1))
+
+expTrav2 :: Traversable f => Cofree f Int -> [Cofree f Int]
+expTrav2 = breadthFirst2 (\x -> [x, x])
 
 benchAtSize :: Int -> [Int] -> Benchmark
 benchAtSize n ms =
@@ -59,7 +65,10 @@ benchAtSize n ms =
                         , bench "id/old"    $ nf identityTrav2 xs
                         , bench "id/new"    $ nf identityTrav xs
                         , bench "full/old"  $ nf fullTrav2 xs
-                        , bench "full/new"  $ nf fullTrav xs]
+                        , bench "full/new"  $ nf fullTrav xs
+                        , bench "exp/old"   $ nf expTrav2 xs
+                        , bench "exp/new"   $ nf expTrav xs
+                        ]
                   , bgroup
                         "levels"
                         [ bench "levels1" $ nf levels1 xs
@@ -68,4 +77,4 @@ benchAtSize n ms =
         | m <- ms ]
 
 main :: IO ()
-main = defaultMain (map (uncurry benchAtSize) [(10000,[5,10,50])])
+main = defaultMain (map (uncurry benchAtSize) [(5,[2,10,50])])
