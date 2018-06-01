@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes          #-}
 
 module Control.Comonad.Cofree.BreadthFirst
   (breadthFirst
@@ -20,14 +21,19 @@ uncons  = \case
 {-# INLINE uncons #-}
 
 breadthFirst
-    :: (Applicative f, Traversable t)
+    :: forall t a f b. (Applicative f, Traversable t)
     => (a -> f b) -> Cofree t a -> f (Cofree t b)
-breadthFirst c t = head <$> foldr (liftA2 evalState) (pure []) (f b t (pure (pure [])) [])
+breadthFirst c t =
+    head <$> f b t (pure (pure [])) []
   where
-    f k (x:<xs) ls qs = k (app2 (\y ys zs -> (y:<ys) : zs) (c x) (fill xs) ls) (xs : qs)
+    f :: forall x.
+         (f (State [Cofree t b] [Cofree t b]) -> [t (Cofree t a)] -> x)
+      -> Cofree t a
+      -> (f (State [Cofree t b] [Cofree t b]) -> [t (Cofree t a)] -> x)
+    f k (x :< xs) ls qs = k (app2 (\y ys zs -> (y :< ys) : zs) (c x) (fill xs) ls) (xs : qs)
 
-    b _ [] = []
-    b k qs = k : foldl (foldl f) b qs (pure (pure [])) []
+    b k [] = fmap (flip evalState []) k
+    b k qs = liftA2 evalState k $ foldl (foldl f) b qs (pure (pure [])) []
 {-# INLINE breadthFirst #-}
 
 ibreadthFirst
