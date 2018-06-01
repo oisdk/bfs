@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Control.Comonad.BreadthFirst where
+module Control.Comonad.Cofree.BreadthFirst where
 
 import           Control.Comonad.Cofree
 
@@ -51,3 +51,25 @@ breadthFirst c (t:<ts) = liftA2 evalState (map2 (:<) (c t) (fill ts)) chld
     {-# INLINE map2 #-}
     {-# INLINE app2 #-}
 {-# INLINE breadthFirst #-}
+
+ibreadthFirst
+    :: (Applicative f, Traversable t)
+    => (Int -> a -> f b) -> Cofree t a -> f (Cofree t b)
+ibreadthFirst c (t:<ts) = liftA2 evalState (map2 (:<) (c 0 t) (fill ts)) chld
+  where
+    chld = foldr (liftA2 evalState) (pure []) (foldr (f 1) [] ts)
+    {-# INLINE chld #-}
+    fill = traverse (const (State (\case
+                                        (x:xs) -> (x, xs)
+                                        [] -> errorWithoutStackTrace
+                                                  "Control.Comonad.BreadthFirst: bug!")))
+    {-# INLINE fill #-}
+    f i (x:<xs) (q:qs) = app2 (\y ys zs -> (y:<ys) : zs) (c i x) (fill xs) q : foldr (f (i+1)) qs xs
+    f i (x:<xs) []     = map2 (\y ys    -> [y:<ys]     ) (c i x) (fill xs)   : foldr (f (i+1)) [] xs
+
+    map2 k x xs = fmap   (\y -> fmap   (k y) xs) x
+    app2 k x xs = liftA2 (\y -> liftA2 (k y) xs) x
+
+    {-# INLINE map2 #-}
+    {-# INLINE app2 #-}
+{-# INLINE ibreadthFirst #-}

@@ -6,7 +6,7 @@ import Criterion.Main
 import System.Random
 import Control.Monad
 import Control.Comonad.Cofree
-import Control.Comonad.BreadthFirst
+import Control.Comonad.Cofree.BreadthFirst
 import Control.Applicative
 import Data.Monoid
 import Control.DeepSeq

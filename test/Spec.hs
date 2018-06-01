@@ -8,11 +8,12 @@ import qualified Hedgehog.Internal.Gen        as Gen
 import qualified Hedgehog.Internal.Tree       as HTree
 import qualified Hedgehog.Range               as Range
 
-import           Control.Comonad.BreadthFirst
+import           Control.Comonad.Cofree.BreadthFirst
 
 import           Control.Comonad.Cofree
 import           Control.Lens                 hiding ((:<))
 import           Control.Monad.Trans.Maybe
+import           Control.Monad ((<=<))
 
 import           Data.Tree                    (Tree (..))
 import qualified Data.Tree                    as Tree
@@ -43,6 +44,12 @@ prop_travorder :: Property
 prop_travorder = property $ do
     xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
     fst (breadthFirst (\x -> ([x],())) xs) === views tree (concat . Tree.levels) xs
+
+prop_itravorder :: Property
+prop_itravorder = property $ do
+    xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
+    fst (ibreadthFirst (\i x ->([(i,x)], ())) xs) === views tree (sequenceA <=< zip [0..] . Tree.levels) xs
+
 
 main :: IO Bool
 main = checkParallel $$(discover)
