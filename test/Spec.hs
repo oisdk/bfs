@@ -45,11 +45,6 @@ prop_travorder = property $ do
     xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
     fst (breadthFirst (\x -> ([x],())) xs) === views tree (concat . Tree.levels) xs
 
-prop_itravorder :: Property
-prop_itravorder = property $ do
-    xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
-    fst (ibreadthFirst (\i x ->([(i,x)], ())) xs) === views tree (sequenceA <=< zip [0..] . Tree.levels) xs
-
 prop_levels :: Property
 prop_levels = property $ do
     xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))

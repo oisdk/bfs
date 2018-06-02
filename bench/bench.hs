@@ -66,8 +66,8 @@ benchAtSize n ms =
                         , bench "id/new"    $ nf identityTrav xs
                         , bench "full/old"  $ nf fullTrav2 xs
                         , bench "full/new"  $ nf fullTrav xs
-                        , bench "exp/old"   $ nf expTrav2 xs
-                        , bench "exp/new"   $ nf expTrav xs
+                        -- , bench "exp/old"   $ nf expTrav2 xs
+                        -- , bench "exp/new"   $ nf expTrav xs
                         ]
                   , bgroup
                         "levels"
@@ -77,4 +77,4 @@ benchAtSize n ms =
         | m <- ms ]
 
 main :: IO ()
-main = defaultMain (map (uncurry benchAtSize) [(5,[2,10,50])])
+main = defaultMain (map (uncurry benchAtSize) [(50,[2,10,1000])])
