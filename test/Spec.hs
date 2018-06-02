@@ -8,51 +8,48 @@ import qualified Hedgehog.Internal.Gen        as Gen
 import qualified Hedgehog.Internal.Tree       as HTree
 import qualified Hedgehog.Range               as Range
 
-import           Control.Comonad.Cofree.BreadthFirst
-
-import           Control.Comonad.Cofree
-import           Control.Lens                 hiding ((:<))
+import           Control.Lens
 import           Control.Monad.Trans.Maybe
-import           Control.Monad ((<=<))
 
 import           Data.Tree                    (Tree (..))
 import qualified Data.Tree                    as Tree
 
-tree :: Iso (Cofree [] a) (Cofree [] b) (Tree a) (Tree b)
-tree = iso toTree fromTree
-  where
-    toTree (x :< xs) = Node x (map toTree xs)
-    fromTree (Node x xs) = x :< map fromTree xs
+import qualified Data.Tree.BreadthFirst.Iterative as Iterative
+import qualified Data.Tree.BreadthFirst.Queued    as Queued
+import qualified Data.Tree.BreadthFirst.Zippy     as Zippy
 
-genCofree
-    :: Gen a -> Gen (Cofree [] a)
-genCofree = Gen.GenT . (fmap . fmap) f . Gen.unGen
+genTree
+    :: Gen a -> Gen (Tree a)
+genTree = Gen.GenT . (fmap . fmap) f . Gen.unGen
   where
     f = HTree.Tree . fmap h . HTree.runTree
-    h nd@(HTree.Node _ xs) = HTree.Node (toCofree nd) (fmap f xs)
-    toCofree (HTree.Node x xs) =
-        x :<
-        [ toCofree y
+    h nd@(HTree.Node _ xs) = HTree.Node (toTree nd) (fmap f xs)
+    toTree (HTree.Node x xs) =
+        Node x
+        [ toTree y
         | HTree.Tree (MaybeT (Identity (Just y))) <- xs ]
 
 prop_travidentity :: Property
 prop_travidentity = property $ do
-    xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
-    (runIdentity . breadthFirst Identity) xs === xs
+    xs <- forAll (genTree (Gen.int (Range.linear 0 15)))
+    (runIdentity . Iterative.breadthFirst Identity) xs === xs
+    (runIdentity . Queued.breadthFirst Identity) xs === xs
+    (runIdentity . Zippy.breadthFirst Identity) xs === xs
 
 prop_travorder :: Property
 prop_travorder = property $ do
-    xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
-    fst (breadthFirst (\x -> ([x],())) xs) === views tree (concat . Tree.levels) xs
+    xs <- forAll (genTree (Gen.int (Range.linear 0 15)))
+    fst (Iterative.breadthFirst (\x -> ([x],())) xs) === (concat . Tree.levels) xs
+    fst (Queued.breadthFirst (\x -> ([x],())) xs) === (concat . Tree.levels) xs
+    fst (Zippy.breadthFirst (\x -> ([x],())) xs) === (concat . Tree.levels) xs
 
 prop_levels :: Property
 prop_levels = property $ do
-    xs <- forAll (genCofree (Gen.int (Range.linear 0 15)))
-    let ys = views tree Tree.levels xs
-    ys === levels1 xs
-    ys === levels2 xs
-    ys === levels3 xs
-
+    xs <- forAll (genTree (Gen.int (Range.linear 0 15)))
+    let ys = Tree.levels xs
+    ys === Iterative.levels xs
+    ys === Queued.levels xs
+    ys === Zippy.levels xs
 
 main :: IO Bool
 main = checkParallel $$(discover)
