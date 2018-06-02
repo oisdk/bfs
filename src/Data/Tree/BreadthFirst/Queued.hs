@@ -12,6 +12,7 @@ levels tr = f b tr [] []
 
     b _ [] = []
     b k qs = k : foldl (foldl f) b qs [] []
+{-# INLINE levels #-}
 
 breadthFirst
     :: Applicative f
@@ -23,3 +24,4 @@ breadthFirst c tr = fmap head (f b tr e [])
     b _ [] = pure []
     b l qs = liftA2 evalState l (foldl (foldl f) b qs e [])
     e = pure (pure [])
+{-# INLINE breadthFirst #-}

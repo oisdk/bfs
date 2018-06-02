@@ -10,6 +10,7 @@ levels ts = f ts []
   where
     f (Node x xs) (q:qs) = (x:q) : foldr f qs xs
     f (Node x xs) []     = [x]   : foldr f [] xs
+{-# INLINE levels #-}
 
 breadthFirst :: Applicative f
              => (a -> f b)
@@ -22,3 +23,4 @@ breadthFirst c tr =
         app2 (\y ys zs -> Node y ys:zs) (c x) (fill xs) q : foldr f qs xs
     f (Node x xs) [] =
         map2 (\y ys -> [Node y ys]) (c x) (fill xs) : foldr f [] xs
+{-# INLINE breadthFirst #-}

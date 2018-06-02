@@ -12,6 +12,7 @@ levels t =  unfoldr (f . concat) [[t]]
   where
     f [] = Nothing
     f xs = Just (unzip [(y,ys) | Node y ys <- xs])
+{-# INLINE levels #-}
 
 breadthFirst
     :: Applicative f
@@ -25,3 +26,4 @@ breadthFirst c tr = fmap head (go [tr])
             (getCompose (traverse f xs))
             (go (foldr (\(Node _ ys) b -> foldr (:) b ys) [] xs))
     f (Node x xs) = Compose (map2 Node (c x) (fill xs))
+{-# INLINE breadthFirst #-}

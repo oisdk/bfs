@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 415f23f55c729089332760081441d833761428e84c09c82ce81e0dc3fa61a803
+-- hash: a617a2c97450fa3070295e0b9ff56ff584e7bfd0b5545ce4578646a2b6dea495
 
 name:           bfs
 version:        0.1.0.0
@@ -26,7 +26,6 @@ source-repository head
 
 library
   exposed-modules:
-      Control.Comonad.Cofree.BreadthFirst
       Control.Monad.State.Simple
       Data.Tree.BreadthFirst.Common
       Data.Tree.BreadthFirst.Iterative
