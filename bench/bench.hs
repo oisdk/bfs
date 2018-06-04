@@ -13,12 +13,10 @@ import           Data.Monoid
 import           Data.Tree
 import           System.Random
 
-import qualified Data.Tree.BreadthFirst.Iterative as Iterative
-import qualified Data.Tree.BreadthFirst.Queued    as Queued
-import qualified Data.Tree.BreadthFirst.Zippy     as Zippy
-
-import           Control.Lens
-
+import qualified Data.Tree.BreadthFirst.Applicative as Applicative
+import qualified Data.Tree.BreadthFirst.Iterative   as Iterative
+import qualified Data.Tree.BreadthFirst.Queued      as Queued
+import qualified Data.Tree.BreadthFirst.Zippy       as Zippy
 
 int :: Int -> IO Int
 int n = randomRIO (1,n)
@@ -29,17 +27,34 @@ tree n m = go n
     go i | i <= 1 = flip Node [] <$> int n
          | otherwise = liftA2 Node (int n) (replicateM m (go (i `div` m)))
 
-constTrav :: Traversal' (Tree Int) Int -> Tree Int -> Int
+constTrav
+    :: ((Int -> Const (Sum Int) Int) -> Tree Int -> Const (Sum Int) (Tree Int))
+    -> Tree Int
+    -> Int
 constTrav bf = getSum . getConst . bf (Const . Sum)
 
-identityTrav :: Traversal' (Tree a) a -> Tree a -> Tree a
+identityTrav
+    :: ((Int -> Identity Int) -> Tree Int -> Identity (Tree Int))
+    -> Tree Int
+    -> Tree Int
 identityTrav bf = runIdentity . bf Identity
 
-fullTrav :: Traversal' (Tree Int) Int -> Tree Int -> (Int, Tree Int)
+fullTrav
+    :: ((Int -> (Sum Int, Int)) -> Tree Int -> (Sum Int, Tree Int))
+    -> Tree Int
+    -> (Int, Tree Int)
 fullTrav bf = first getSum . bf (\x -> (Sum x, x+1))
 
 -- expTrav :: Traversal' (Tree Int) Int -> Tree Int -> [Tree Int]
 -- expTrav bf = bf (\x -> [x, x])
+
+traversals :: Applicative f => [(String, (a -> f b) -> Tree a -> f (Tree b))]
+traversals =
+    [ ("iterative", Iterative.breadthFirst)
+    , ("queued", Queued.breadthFirst)
+    , ("zippy", Zippy.breadthFirst)
+    , ("applicative", Applicative.breadthFirst)]
+
 
 benchAtSize :: Int -> [Int] -> Benchmark
 benchAtSize n ms =
@@ -53,28 +68,16 @@ benchAtSize n ms =
                         "traversals"
                         [ bgroup
                               "const"
-                              [ bench "iterative" $
-                                nf (constTrav Iterative.breadthFirst) xs
-                              , bench "queued" $
-                                nf (constTrav Queued.breadthFirst) xs
-                              , bench "zippy" $
-                                nf (constTrav Zippy.breadthFirst) xs]
+                              [ bench nm $ nf (constTrav trav) xs
+                              | (nm,trav) <- traversals ]
                         , bgroup
                               "id"
-                              [ bench "iterative" $
-                                nf (identityTrav Iterative.breadthFirst) xs
-                              , bench "queued" $
-                                nf (identityTrav Queued.breadthFirst) xs
-                              , bench "zippy" $
-                                nf (identityTrav Zippy.breadthFirst) xs]
+                              [ bench nm $ nf (identityTrav trav) xs
+                              | (nm,trav) <- traversals ]
                         , bgroup
                               "full"
-                              [ bench "iterative" $
-                                nf (fullTrav Iterative.breadthFirst) xs
-                              , bench "queued" $
-                                nf (fullTrav Queued.breadthFirst) xs
-                              , bench "zippy" $
-                                nf (fullTrav Zippy.breadthFirst) xs]]
+                              [ bench nm $ nf (fullTrav trav) xs
+                              | (nm,trav) <- traversals ]]
                   , bgroup
                         "levels"
                         [ bench "iterative" $ nf Iterative.levels xs
