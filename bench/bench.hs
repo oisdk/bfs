@@ -18,6 +18,7 @@ import qualified Data.Tree.BreadthFirst.Iterative   as Iterative
 import qualified Data.Tree.BreadthFirst.Queued      as Queued
 import qualified Data.Tree.BreadthFirst.Zippy       as Zippy
 
+
 int :: Int -> IO Int
 int n = randomRIO (1,n)
 
@@ -45,8 +46,13 @@ fullTrav
     -> (Int, Tree Int)
 fullTrav bf = first getSum . bf (\x -> (Sum x, x+1))
 
--- expTrav :: Traversal' (Tree Int) Int -> Tree Int -> [Tree Int]
--- expTrav bf = bf (\x -> [x, x])
+expTrav :: ((Int -> [Int]) -> (Tree Int -> [Tree Int]))
+        -> Tree Int
+        -> [Tree Int]
+expTrav bf =
+    bf
+        (\x ->
+              [x, x])
 
 traversals :: Applicative f => [(String, (a -> f b) -> Tree a -> f (Tree b))]
 traversals =
@@ -55,6 +61,16 @@ traversals =
     , ("zippy", Zippy.breadthFirst)
     , ("applicative", Applicative.breadthFirst)]
 
+unfolds
+    :: Monad m
+    => [(String, (b -> m (a, [b])) -> b -> m (Tree a))]
+unfolds = [("Data.Tree", unfoldTreeM_BF), ("iterative", Iterative.unfold)]
+
+idunfold
+    :: ((Tree a -> Identity (a, [Tree a])) -> Tree a -> Identity (Tree a))
+    -> Tree a
+    -> Tree a
+idunfold unf = runIdentity . unf (\(Node x xs) -> Identity (x, xs))
 
 benchAtSize :: Int -> [Int] -> Benchmark
 benchAtSize n ms =
@@ -78,6 +94,11 @@ benchAtSize n ms =
                               "full"
                               [ bench nm $ nf (fullTrav trav) xs
                               | (nm,trav) <- traversals ]]
+                  , bgroup "unfolds"
+                        [ bgroup "id"
+                              [ bench nm $ nf (idunfold unf) xs
+                              | (nm,unf) <- unfolds ]
+                        ]
                   , bgroup
                         "levels"
                         [ bench "iterative" $ nf Iterative.levels xs
@@ -85,5 +106,24 @@ benchAtSize n ms =
                         , bench "zippy" $ nf Zippy.levels xs]]
         | m <- ms ]
 
+smallBenchAtSize :: Int -> [Int] -> Benchmark
+smallBenchAtSize n ms =
+    bgroup
+        (show n)
+        [ env (tree n m) $
+         \xs ->
+              bgroup
+                  (show m)
+                  [ bgroup
+                        "traversals"
+                        [ bgroup
+                              "exp"
+                              [ bench nm $ nf (expTrav trav) xs
+                              | (nm,trav) <- traversals ]]]
+        | m <- ms ]
+
 main :: IO ()
-main = defaultMain (map (uncurry benchAtSize) [(10000,[5,50,100])])
+main =
+    defaultMain
+        (map (uncurry benchAtSize) [(10000, [5, 50, 100])] ++
+         map (uncurry smallBenchAtSize) [(10, [2])])

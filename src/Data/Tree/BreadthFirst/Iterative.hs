@@ -27,3 +27,17 @@ breadthFirst c tr = fmap head (go [tr])
             (go (foldr (\(Node _ ys) b -> foldr (:) b ys) [] xs))
     f (Node x xs) = Compose (map2 Node (c x) (fill xs))
 {-# INLINE breadthFirst #-}
+
+unfold :: Monad m => (b -> m (a, [b])) -> b -> m (Tree a)
+unfold c tr = go head [tr]
+  where
+    go k [] = pure (k [])
+    go k xs = do
+        ys <- traverse c xs
+        go
+            (k . evalState (traverse f ys))
+            [ z
+            | (_,zs) <- ys
+            , z <- zs ]
+    f (x,xs) = fmap (Node x) (fill xs)
+{-# INLINE unfold #-}

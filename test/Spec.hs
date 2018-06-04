@@ -38,6 +38,7 @@ prop_travidentity = property $ do
     (runIdentity . Queued.breadthFirst Identity) xs === xs
     (runIdentity . Zippy.breadthFirst Identity) xs === xs
     (runIdentity . Applicative.breadthFirst Identity) xs === xs
+    (runIdentity . Iterative.unfold (\(Node y ys) -> (Identity (y, ys)))) xs === xs
 
 prop_travorder :: Property
 prop_travorder = property $ do
@@ -46,6 +47,7 @@ prop_travorder = property $ do
     fst (Queued.breadthFirst (\x -> ([x],())) xs) === (concat . Tree.levels) xs
     fst (Zippy.breadthFirst (\x -> ([x],())) xs) === (concat . Tree.levels) xs
     fst (Applicative.breadthFirst (\x -> ([x],())) xs) === (concat . Tree.levels) xs
+    (fst . Iterative.unfold (\(Node y ys) -> ([y], (y, ys)))) xs === (concat . Tree.levels) xs
 
 prop_levels :: Property
 prop_levels = property $ do
