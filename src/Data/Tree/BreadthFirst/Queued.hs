@@ -33,8 +33,8 @@ breadthFirst c tr = fmap head (f b tr e [])
     e = pure (pure [])
 {-# INLINE breadthFirst #-}
 
-unfold :: Monad m => (b -> m (a, [b])) -> b -> m (Tree a)
-unfold f b = f b >>= \(x,xs) -> fmap (Node x) (unfoldForest f xs)
+-- unfold :: Monad m => (b -> m (a, [b])) -> b -> m (Tree a)
+-- unfold f b = f b >>= \(x,xs) -> fmap (Node x) (unfoldForest f xs)
 
 -- unfoldForest :: Monad m => (b -> m (a, [b])) -> [b] -> m (Forest a)
 -- unfoldForest f ts = b [ts] (const id)
@@ -46,21 +46,19 @@ unfold f b = f b >>= \(x,xs) -> fmap (Node x) (unfoldForest f xs)
 --         (x,cs) <- f a
 --         fw (cs : bw) (k . liftA2 (:) (fmap (Node x) (fill cs)))
 
-unfoldForest :: Monad m => (b -> m (a, [b])) -> [b] -> m (Forest a)
-unfoldForest f ts = b [ts] (\ls -> concat . execState (foldr run (pure ()) ls))
+unfold :: Monad m => (b -> m (a, [b])) -> b -> m (Tree a)
+unfold f ts = b [[ts]] (\ls -> head . head . execState ls)
   where
-    b [] k = pure (k [] [])
-    b qs k = foldl g b qs [] (\ls -> k [] . execState (foldr run (pure ()) ls))
+    b [] k = pure (k (pure ()) [])
+    b qs k = foldl g b qs [] (\ls -> k (pure ()) . execState ls)
 
-    g a xs qs k = foldr t (\ls ys -> a ys (k . (:) ls)) xs (pure id) qs
+    g a xs qs k = foldr t (\ls ys -> a ys (k . run ls)) xs (pure id) qs
 
     t a fw xs bw = f a >>= \(x,cs) -> fw (liftA2 (.) xs (fmap (:) (pop x))) (cs:bw)
 
     run x xs = do
-        x' <- x
+        y <- x <*> pure []
         () <- xs
-        modify (x' [] :)
-
-    go st = uncurry (++) . runState (sequenceA st)
+        modify (y:)
 
     pop x  = State (\(y:ys) -> (Node x y, ys))
