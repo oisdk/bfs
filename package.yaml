@@ -25,6 +25,7 @@ dependencies:
 - transformers
 - tree-traversals
 - mtl
+- kan-extensions
 
 library:
   source-dirs: src
