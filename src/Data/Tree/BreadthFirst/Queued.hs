@@ -1,8 +1,12 @@
-module Data.Tree.BreadthFirst.Queued where
+module Data.Tree.BreadthFirst.Queued
+  (levels
+  ,breadthFirst
+  ,unfold)
+  where
 
 import           Control.Applicative
 import           Control.Monad.State.Simple
-import           Data.Tree                     hiding (levels)
+import           Data.Tree                     hiding (levels,unfoldForest)
 import           Data.Tree.BreadthFirst.Common
 
 levels :: Tree a -> [[a]]
@@ -25,3 +29,16 @@ breadthFirst c tr = fmap head (f b tr e [])
     b l qs = liftA2 evalState l (foldl (foldl f) b qs e [])
     e = pure (pure [])
 {-# INLINE breadthFirst #-}
+
+unfold :: Monad m => (b -> m (a, [b])) -> b -> m (Tree a)
+unfold f b = f b >>= \(x,xs) -> fmap (Node x) (unfoldForest f xs)
+
+unfoldForest :: Monad m => (b -> m (a, [b])) -> [b] -> m (Forest a)
+unfoldForest f ts = b [ts] (const id)
+  where
+    b [] k = pure (k [] [])
+    b qs k = foldl (foldr t) b qs [] (\x xs -> k [] (evalState (sequenceA x) xs))
+
+    t a fw bw k = do
+        (x,cs) <- f a
+        fw (cs : bw) (k . (:) (fmap (Node x) (fill cs)))
