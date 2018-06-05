@@ -24,6 +24,7 @@ dependencies:
 - containers
 - transformers
 - tree-traversals
+- mtl
 
 library:
   source-dirs: src

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 34294e00d1ae634060131d27f43c8bdf436825c31e2668b97e557256366c91a0
+-- hash: ba5b716025dd44c0e04d4c368e99db68872912dc5c55564386f12a502f3ec8fb
 
 name:           bfs
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , mtl
     , transformers
     , tree-traversals
   if impl(ghc >= 8.0)
@@ -60,6 +61,7 @@ test-suite bfs-doctests
     , bfs
     , containers
     , doctest
+    , mtl
     , transformers
     , tree-traversals
   if impl(ghc >= 8.0)
@@ -79,6 +81,7 @@ test-suite bfs-test
     , bfs
     , containers
     , hedgehog
+    , mtl
     , transformers
     , tree-traversals
   if impl(ghc >= 8.0)
@@ -99,6 +102,7 @@ benchmark bench
     , containers
     , criterion
     , deepseq
+    , mtl
     , random
     , transformers
     , tree-traversals
