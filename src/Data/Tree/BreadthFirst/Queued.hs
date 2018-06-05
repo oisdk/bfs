@@ -47,21 +47,20 @@ unfold f b = f b >>= \(x,xs) -> fmap (Node x) (unfoldForest f xs)
 --         fw (cs : bw) (k . liftA2 (:) (fmap (Node x) (fill cs)))
 
 unfoldForest :: Monad m => (b -> m (a, [b])) -> [b] -> m (Forest a)
-unfoldForest f ts = b [ts] (\ls -> concat . foldr run id ls)
+unfoldForest f ts = b [ts] (\ls -> concat . execState (foldr run (pure ()) ls))
   where
     b [] k = pure (k [] [])
-    b qs k = foldl g b qs [] (\ls -> k [] . foldr run id ls)
+    b qs k = foldl g b qs [] (\ls -> k [] . execState (foldr run (pure ()) ls))
 
     g a xs qs k = foldr t (\ls ys -> a ys (k . (:) ls)) xs (pure id) qs
 
     t a fw xs bw = f a >>= \(x,cs) -> fw (liftA2 (.) xs (fmap (:) (pop x))) (cs:bw)
 
-    run x xs ys = uncurry (:) $ runState (x <*> (State (\zs -> ([], xs zs))) ) ys
-        -- x <- x'
-        -- xs <- xs'
-        -- modify ((x xs):)
-        -- pure []
+    run x xs = do
+        x' <- x
+        () <- xs
+        modify (x' [] :)
 
-    go st = uncurry (:) . runState st
+    go st = uncurry (++) . runState (sequenceA st)
 
     pop x  = State (\(y:ys) -> (Node x y, ys))
