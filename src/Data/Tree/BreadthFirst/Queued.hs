@@ -36,9 +36,9 @@ unfold f b = f b >>= \(x,xs) -> fmap (Node x) (unfoldForest f xs)
 unfoldForest :: Monad m => (b -> m (a, [b])) -> [b] -> m (Forest a)
 unfoldForest f ts = b [ts] (const id)
   where
-    b [] k = pure (k [] [])
-    b qs k = foldl (foldr t) b qs [] (\x xs -> k [] (evalState (sequenceA x) xs))
+    b [] k = pure (k (pure []) [])
+    b qs k = foldl (foldr t) b qs [] (\x xs -> k (pure []) (evalState x xs))
 
     t a fw bw k = do
         (x,cs) <- f a
-        fw (cs : bw) (k . (:) (fmap (Node x) (fill cs)))
+        fw (cs : bw) (k . liftA2 (:) (fmap (Node x) (fill cs)))
